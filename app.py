@@ -42,6 +42,22 @@ def extract_from_url(url):
     text='\n'.join([p.get_text() for p in paras])
     return text
 
+def save_file_and_extract_text(file):
+    try:
+        if file:
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            if filename.lower().endswith('.pdf'):
+                text = extract_from_pdf(file_path)
+            else:
+                text = "Unsupported file format. Please upload a PDF file."
+            return text
+        else:
+            return "No file uploaded."
+    except Exception as e:
+        return str(e)
+
 def extract_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
     text = ""
@@ -103,7 +119,7 @@ def generate_summary():
     global global_text
     try:
         if('file' in request.files):
-            global_text= file_up()
+            global_text= save_file_and_extract_text(request.files['file'])
             summary=summary_g(global_text)
             return jsonify({"summary": summary})
         elif('url' in request.json !=""):
@@ -115,6 +131,8 @@ def generate_summary():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
     
 REVIEWS_CHROMA_PATH = "chroma_data"
 def get_vector_db(text):
