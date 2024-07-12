@@ -116,7 +116,7 @@ def url():
 
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
-    if 'file' not in request.files:
+    if 'file' and 'url' not in request.files:
         return jsonify({'error': 'No file part'}), 400
     global global_text
     try:
