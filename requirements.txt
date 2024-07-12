@@ -2,6 +2,7 @@ Flask==3.0.3
 werkzeug==3.0.3
 openai
 langchain
+langchain-openai
 bs4
 requests
 python-dotenv
