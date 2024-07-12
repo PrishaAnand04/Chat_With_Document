@@ -1,12 +1,11 @@
-Flask==2.0.3
-gunicorn==20.1.0
+Flask==3.0.3 
+werkzeug==3.0.3
 openai
 langchain
 bs4
 requests
 python-dotenv
 PyMuPDF
-werkzeug
+langchain-community
 langchain-core
 langchain-chroma
-langchain-community
