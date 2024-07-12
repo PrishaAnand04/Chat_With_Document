@@ -22,9 +22,11 @@
         </div>
 
         <div id="fileInput" class="hidden">
+            <form id="uploadForm" enctype="multipart/form-data">
             <label for="file">Upload Document:</label><br>
             <input type="file" id="file" name="file" accept=".pdf"><br>
             <button onclick="submitFile()">Upload</button>
+        </form>
         </div>
 
         <div id="summaryOutput" class="hidden">
