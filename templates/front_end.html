@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Your Document</title>
+    <link rel="stylesheet" href="static\front_end.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Chat with Your Document</h1>
+
+        <div id="documentInput">
+            <button class="option" onclick="showInput('url')">URL</button>
+            <button class="option" onclick="showInput('file')">Document</button>
+        </div>
+
+        <div id="urlInput" class="hidden">
+            <label for="url">Enter URL:</label><br>
+            <input type="text" id="url" name="url"><br>
+            <button onclick="submitUrl()">Submit</button>
+        </div>
+
+        <div id="fileInput" class="hidden">
+            <label for="file">Upload Document:</label><br>
+            <input type="file" id="file" name="file" accept=".pdf"><br>
+            <button onclick="submitFile()">Upload</button>
+        </div>
+
+        <div id="summaryOutput" class="hidden">
+            <label for="summary">Summary:</label><br>
+            <textarea id="summary" readonly></textarea>
+        </div>
+
+        <div id="questionInput" class="hidden">
+            <label for="question">Ask a Question:</label><br>
+            <textarea id="question"></textarea><br>
+            <button onclick="submitQuestion()">Find Answer</button>
+        </div>
+
+        <div id="answerOutput" class="hidden">
+            <label for="answer">Answer:</label><br>
+            <textarea id="answer" readonly></textarea>
+        </div>
+    </div>
+
+    <script src="static\front_end.js"></script>
+</body>
+</html>
