@@ -9,3 +9,4 @@ PyMuPDF
 langchain-community
 langchain-core
 langchain-chroma
+gunicorn
