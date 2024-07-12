@@ -1,0 +1,12 @@
+Flask
+openai
+langchain
+bs4
+requests
+python-dotenv
+PyMuPDF
+werkzeug
+langchain-community
+langchain-chroma
+langchain-openai
+langchain-core
