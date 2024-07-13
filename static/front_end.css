@@ -55,6 +55,21 @@ label {
     display: none;
 }
 
-.option{
-    margin-left: 150px;
+#documentInput {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Adjust this value for the desired spacing */
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    #documentInput {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .option {
+        width: 100%;
+        text-align: center;
+    }
 }
