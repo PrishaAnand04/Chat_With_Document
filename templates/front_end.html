@@ -8,7 +8,15 @@
 </head>
 <body>
     <div class="container">
-        <h1>Chat with Your Document</h1>
+        <h1>Meet Pico</h1>
+
+        <div class="intro">
+            <center>
+            <h2>Welcome! I'm Pico, your friendly and intelligent chatbot! 🌟</h2></center>
+            <p>Pico is here to help you chat based on the information you provide through a URL or a document. Whether you need a summary or answers to specific questions, Pico is ready to assist you. Just upload your document or share a link, and let Pico do the rest!</p>
+            <p>Feel free to ask anything, and remember, Pico is here to make your life easier with quick and accurate responses.</p>
+            <p>Let's get started! 🚀</p>
+        </div>
 
         <div id="documentInput">
             <button class="option" onclick="showInput('url')">URL</button>
@@ -41,6 +49,12 @@
         <div id="answerOutput" class="hidden">
             <label for="answer">Answer:</label><br>
             <textarea id="answer" readonly></textarea>
+        </div>
+        
+        <div class="footer">
+            <center>
+            <p>Please hang tight, as generating responses might take a few minutes. Thanks for your patience!</p>
+        </center>
         </div>
     </div>
 
