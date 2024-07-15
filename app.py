@@ -90,7 +90,7 @@ client_cc = AzureOpenAI(
   azure_deployment='gpt3516k'
 )
 
-def chunk_text(text, max_tokens):
+def chunk_text(text, max_tokens=1500):
     words = text.split()
     chunks = []
     current_chunk = []
