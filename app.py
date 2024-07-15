@@ -90,6 +90,22 @@ client_cc = AzureOpenAI(
   azure_deployment='gpt3516k'
 )
 
+def chunk_text(text, max_tokens):
+    words = text.split()
+    chunks = []
+    current_chunk = []
+
+    for word in words:
+        if len(current_chunk) + len(word) + 1 <= max_tokens:
+            current_chunk.append(word)
+        else:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = [word]
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
+    return chunks
+
 def summary_g(text):
     prompt = f"Summarize the following text:\n\n{text}"
     response = client_cc.chat.completions.create(
@@ -122,11 +138,15 @@ def generate_summary():
             if 'file' not in request.files :
                 return jsonify({'error': 'No file part'}), 400
             global_text= save_file_and_extract_text(request.files['file'])
-            summary=summary_g(global_text)
+            chunks=chunk_text(global_text)
+            summary_f=[summary_g(chunk) for chunk in chunks]
+            summary=' '.join(summary_f)
             return jsonify({"summary": summary})
         elif('url' in request.json !=""):
             global_text=url()
-            summary_url=summary_g(global_text)
+            chunks=chunk_text(global_text)
+            summary_u=[summary_g(chunk) for chunk in chunks] 
+            summary_url=' '.join(summary_u)
             return jsonify({"summary":summary_url})
         else:
             return jsonify({"error": "No file or URL provided"}), 400
