@@ -158,7 +158,8 @@ def generate_summary():
     
 REVIEWS_CHROMA_PATH = "chroma_data"
 def get_vector_db(text):
-    documents = [Document(page_content=text)]
+    chunks=chunk_text(text)
+    documents = [Document(page_content=chunk) for chunk in chunks]
     vector_db = Chroma.from_documents(
         documents, AzureOpenAIEmbeddings(
             api_key="f35b5881905f403eb0c39bb0a9f45cf5",
@@ -185,7 +186,7 @@ def answer_g(quess):
             azure_endpoint="https://service-ih.openai.azure.com/",
             azure_deployment="gpt3516k",
             temperature=0
-    )
+        )
         
     review_template_str = """Your job is to use the information provided in the document
     to answer questions. Use the following context to answer questions.
