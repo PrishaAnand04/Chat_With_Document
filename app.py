@@ -32,7 +32,7 @@ global_text=""
 
 @app.route('/')
 def index():
-    return render_template('front_end.html')
+    return render_template('frontend.html')
 
 def extract_from_url(url):
     url_add=url

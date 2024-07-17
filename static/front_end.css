@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     margin: 20px;
-    background-color: #f4f4f9; 
+    background-color: #f4f4f9;
     color: #333;
 }
 
@@ -9,18 +9,18 @@ body {
     max-width: 600px;
     margin: auto;
     padding: 20px;
-    background-color: #ffffff; 
+    background-color: #ffffff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
 }
 
 h1 {
-    color: #5e2ca5; 
+    color: #4CAF50;
     text-align: center;
 }
 
 button {
-    background-color: #5e2ca5;
+    background-color: #4CAF50;
     color: white;
     padding: 10px 20px;
     margin: 10px 5px;
@@ -30,7 +30,7 @@ button {
 }
 
 button:hover {
-    background-color: #6d3eb5; 
+    background-color: #45a049;
 }
 
 input[type="text"], textarea, input[type="file"] {
@@ -72,4 +72,22 @@ label {
         width: 100%;
         text-align: center;
     }
+}
+
+.intro {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.intro h2 {
+    color: #333; 
+}
+
+.intro p {
+    color: #333; 
+}
+
+.note p {
+    font-style: italic;
+    color: grey; 
 }
