@@ -34,7 +34,7 @@ button:hover {
 }
 
 input[type="text"], textarea, input[type="file"], select {
-    width: calc(100% - 22px); /* Adjusted width to match the padding and border */
+    width: calc(100% - 22px); 
     padding: 10px;
     margin: 10px 0;
     border: 1px solid #ccc;

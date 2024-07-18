@@ -179,16 +179,6 @@ def generate_summary():
             summary_u=[summary_g(chunk) for chunk in chunks] 
             summary_url=' '.join(summary_u)
             hyperlinks=global_text[1]
-            '''
-            chunk_hp=chunk_text(global_text[1])
-            summary_hp=[summary_g(chunk) for chunk in chunk_hp]'''
-            '''
-            content_list=[extract_content(link) for link in hyperlink_list]
-            hyperlink_summary=[summary_g(c_list) for c_list in content_list]'''
-
-            #summary=summary_url+'\nThe summary of the hyperlink provided in the document is '+''.join(summary_hp)
-            #summary_url+=summary
-            #global_text+=" "+content
             return jsonify({"summary":summary_url, "hyperlinks": hyperlinks})
         elif ('url_hp' in request.json !=""):
             hyperlink_input= request.json['url_hp']
