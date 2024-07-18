@@ -22,6 +22,7 @@ from langchain.schema.runnable import RunnablePassthrough
 import fitz
 from werkzeug.utils import secure_filename
 import os
+from urllib.parse import urljoin
 
 dotenv.load_dotenv()
 
@@ -30,17 +31,75 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 
 global_text=""
 
+hyperlink_list=[]
+
+client_cc = AzureOpenAI(
+  api_key = "f35b5881905f403eb0c39bb0a9f45cf5",  
+  api_version = "2024-02-15-preview",
+  azure_endpoint= "https://service-ih.openai.azure.com/",
+  azure_deployment='gpt3516k'
+)
+
+client_em=AzureOpenAI(
+    api_key="f35b5881905f403eb0c39bb0a9f45cf5",
+    api_version="2024-02-01",
+    azure_endpoint="https://service-ih.openai.azure.com/",
+    azure_deployment="text-embedding-ada-002"
+)  
+
 @app.route('/')
 def index():
     return render_template('frontend.html')
 
 def extract_from_url(url):
-    url_add=url
-    respon=requests.get(url_add)
+    respon=requests.get(url)
+    soup=BeautifulSoup(respon.content, 'html.parser')
+    paras=soup.find_all('p')
+    text='\n'.join([p.get_text() for p in paras])
+    links = soup.find_all('a', href=True)
+    all_links = [urljoin(url, link['href']) for link in links[:50]]
+    return text,all_links
+
+def extract_content(url):
+    respon=requests.get(url)
     soup=BeautifulSoup(respon.content, 'html.parser')
     paras=soup.find_all('p')
     text='\n'.join([p.get_text() for p in paras])
     return text
+
+'''
+def url_g():
+    try:
+        data = request.get_json()
+        text_input = data["url"]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 300
+    try:
+        text=extract_from_url(text_input)
+        return text
+    except Exception as e:
+        return jsonify({"error":str(e)}),100'''
+    
+def url():
+    try:
+        data = request.get_json()
+        text_input = data["url"]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 300
+    try:
+        text, links = extract_from_url(text_input)
+        return text, links
+    except Exception as e:
+        return jsonify({"error":str(e)}),100
+
+    '''
+    text_input = request.json['url']
+    number_link=request.json['number_link']
+    text,link= extract_from_url(text_input)
+    content=extract_content(link[number_link])
+    return text,content'''
+
+
 
 def save_file_and_extract_text(file):
     try:
@@ -65,30 +124,15 @@ def extract_from_pdf(pdf_path):
         text += page.get_text()
     return text
 
-client_em=AzureOpenAI(
-    api_key="f35b5881905f403eb0c39bb0a9f45cf5",
-    api_version="2024-02-01",
-    azure_endpoint="https://service-ih.openai.azure.com/",
-    azure_deployment="text-embedding-ada-002"
-)  
-def url_g():
-    try:
-        data = request.get_json()
-        text_input = data["url"]
-    except Exception as e:
-        return jsonify({"error": str(e)}), 300
-    try:
-        text=extract_from_url(text_input)
+def file_up():
+    file = request.files['file']
+    if file:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        text = extract_from_pdf(file_path)
         return text
-    except Exception as e:
-        return jsonify({"error":str(e)}),100
 
-client_cc = AzureOpenAI(
-  api_key = "f35b5881905f403eb0c39bb0a9f45cf5",  
-  api_version = "2024-02-15-preview",
-  azure_endpoint= "https://service-ih.openai.azure.com/",
-  azure_deployment='gpt3516k'
-)
 
 def chunk_text(text, max_tokens=1500):
     words = text.split()
@@ -107,32 +151,19 @@ def chunk_text(text, max_tokens=1500):
     return chunks
 
 def summary_g(text):
-    prompt = f"Summarize the following text:\n\n{text}"
+    prompt = f"Summarize the following text in maximum 5 lines:\n\n{text}"
     response = client_cc.chat.completions.create(
         model="gpt3516k",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=150,
-        temperature=0.5
+        temperature=0
     )
     return response.choices[0].message.content
 
-def file_up():
-    file = request.files['file']
-    if file:
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        text = extract_from_pdf(file_path)
-        return text
-
-def url():
-    text_input = request.json['url']
-    text = extract_from_url(text_input)
-    return text
 
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
-    global global_text
+    global global_text,content
     try:
         if('file' in request.files):
             if 'file' not in request.files :
@@ -144,10 +175,28 @@ def generate_summary():
             return jsonify({"summary": summary})
         elif('url' in request.json !=""):
             global_text=url()
-            chunks=chunk_text(global_text)
+            chunks=chunk_text(global_text[0])
             summary_u=[summary_g(chunk) for chunk in chunks] 
             summary_url=' '.join(summary_u)
-            return jsonify({"summary":summary_url})
+            hyperlinks=global_text[1]
+            '''
+            chunk_hp=chunk_text(global_text[1])
+            summary_hp=[summary_g(chunk) for chunk in chunk_hp]'''
+            '''
+            content_list=[extract_content(link) for link in hyperlink_list]
+            hyperlink_summary=[summary_g(c_list) for c_list in content_list]'''
+
+            #summary=summary_url+'\nThe summary of the hyperlink provided in the document is '+''.join(summary_hp)
+            #summary_url+=summary
+            #global_text+=" "+content
+            return jsonify({"summary":summary_url, "hyperlinks": hyperlinks})
+        elif ('url_hp' in request.json !=""):
+            hyperlink_input= request.json['url_hp']
+            content = extract_content(hyperlink_input)
+            chunks = chunk_text(content)
+            summary_hp = [summary_g(chunk) for chunk in chunks]
+            summary =' '.join(summary_hp)
+            return jsonify({"summary": summary})
         else:
             return jsonify({"error": "No file or URL provided"}), 400
         
@@ -229,11 +278,12 @@ def answer_g(quess):
 
 @app.route('/find_answer', methods=['POST'])
 def generate_answer():
-    global global_text
+    global global_text,content
     try:
         if not global_text:
             return jsonify({"error": "No text available from file or URL"}), 400
-        get_vector_db(global_text)
+        get_vector_db(global_text[0])
+        get_vector_db(content)
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500

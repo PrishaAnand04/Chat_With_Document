@@ -39,6 +39,13 @@
             <textarea id="summary" readonly></textarea>
         </div>
 
+        <div id="hyperlinkInput" class="hidden">
+            <label for="hyperlinkSelect">Select a hyperlink:</label>
+            <input type="hidden" id="hyperlinks" name="hyperlinks">
+            <select id="hyperlinkSelect"></select>
+            <button onclick="submitHyperlink()">Submit Hyperlink</button>
+        </div>        
+
         <div id="questionInput" class="hidden">
             <label for="question">Ask a Question:</label><br>
             <textarea id="question"></textarea><br>

@@ -33,8 +33,8 @@ button:hover {
     background-color: #45a049;
 }
 
-input[type="text"], textarea, input[type="file"] {
-    width: 100%;
+input[type="text"], textarea, input[type="file"], select {
+    width: calc(100% - 22px); /* Adjusted width to match the padding and border */
     padding: 10px;
     margin: 10px 0;
     border: 1px solid #ccc;
