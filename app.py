@@ -163,7 +163,7 @@ def summary_g(text):
 
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
-    global global_text,content
+    global global_text,content,global_text_url
     try:
         if('file' in request.files):
             if 'file' not in request.files :
@@ -174,11 +174,11 @@ def generate_summary():
             summary=' '.join(summary_f)
             return jsonify({"summary": summary})
         elif('url' in request.json !=""):
-            global_text=url()
-            chunks=chunk_text(global_text[0])
+            global_text_url=url()
+            chunks=chunk_text(global_text_url[0])
             summary_u=[summary_g(chunk) for chunk in chunks] 
             summary_url=' '.join(summary_u)
-            hyperlinks=global_text[1]
+            hyperlinks=global_text_url[1]
             return jsonify({"summary":summary_url, "hyperlinks": hyperlinks})
         elif ('url_hp' in request.json !=""):
             hyperlink_input= request.json['url_hp']
@@ -268,12 +268,15 @@ def answer_g(quess):
 
 @app.route('/find_answer', methods=['POST'])
 def generate_answer():
-    global global_text,content
+    global global_text,content,global_text_url
     try:
         if not global_text:
             return jsonify({"error": "No text available from file or URL"}), 400
-        get_vector_db(global_text[0])
-        get_vector_db(content)
+        if('file' in request.files):
+            get_vector_db(global_text)
+        elif('url' in request.json !=""):
+            get_vector_db(global_text_url[0])
+            get_vector_db(content)
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
