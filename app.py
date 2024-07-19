@@ -163,7 +163,7 @@ def summary_g(text):
 
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
-    global global_text,content,global_text_url
+    global global_text,chunks,global_text_url
     try:
         if('file' in request.files):
             if 'file' not in request.files :
@@ -268,15 +268,13 @@ def answer_g(quess):
 
 @app.route('/find_answer', methods=['POST'])
 def generate_answer():
-    global global_text,content,global_text_url
+    global global_text,chunks,global_text_url
     try:
-        if not global_text:
-            return jsonify({"error": "No text available from file or URL"}), 400
-        if('file' in request.files):
+        if ('file' in request.files):
             get_vector_db(global_text)
-        elif('url' in request.json !=""):
-            get_vector_db(global_text_url[0])
-            get_vector_db(content)
+        get_vector_db(global_text_url[0])
+        for chunk in chunks:
+            get_vector_db(chunk) 
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
