@@ -24,14 +24,13 @@ from werkzeug.utils import secure_filename
 import os
 from urllib.parse import urljoin
 
-dotenv.load_dotenv()
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
 global_text=""
 
-hyperlink_list=[]
 
 client_cc = AzureOpenAI(
   api_key = "f35b5881905f403eb0c39bb0a9f45cf5",  
