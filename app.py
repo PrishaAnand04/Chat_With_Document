@@ -54,7 +54,7 @@ def extract_from_url(url):
     paras = soup.find_all('p')
     text = '\n'.join([p.get_text() for p in paras])
     links = soup.find_all('a', href=True)
-    all_links = [urljoin(url, link['href']) for link in links[:50]]
+    all_links = [urljoin(url, link['href']) for link in links[:1000]]
     return text, all_links
 
 def extract_content(url):
