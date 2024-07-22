@@ -25,60 +25,45 @@ import os
 from urllib.parse import urljoin
 
 
-
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
-global_text=""
-
+global_text = ""
 
 client_cc = AzureOpenAI(
-  api_key = "f35b5881905f403eb0c39bb0a9f45cf5",  
-  api_version = "2024-02-15-preview",
-  azure_endpoint= "https://service-ih.openai.azure.com/",
-  azure_deployment='gpt3516k'
+    api_key="f35b5881905f403eb0c39bb0a9f45cf5",  
+    api_version="2024-02-15-preview",
+    azure_endpoint="https://service-ih.openai.azure.com/",
+    azure_deployment='gpt3516k'
 )
 
-client_em=AzureOpenAI(
+client_em = AzureOpenAI(
     api_key="f35b5881905f403eb0c39bb0a9f45cf5",
     api_version="2024-02-01",
     azure_endpoint="https://service-ih.openai.azure.com/",
     azure_deployment="text-embedding-ada-002"
-)  
+)
 
 @app.route('/')
 def index():
     return render_template('frontend.html')
 
 def extract_from_url(url):
-    respon=requests.get(url)
-    soup=BeautifulSoup(respon.content, 'html.parser')
-    paras=soup.find_all('p')
-    text='\n'.join([p.get_text() for p in paras])
+    respon = requests.get(url)
+    soup = BeautifulSoup(respon.content, 'html.parser')
+    paras = soup.find_all('p')
+    text = '\n'.join([p.get_text() for p in paras])
     links = soup.find_all('a', href=True)
     all_links = [urljoin(url, link['href']) for link in links[:50]]
-    return text,all_links
+    return text, all_links
 
 def extract_content(url):
-    respon=requests.get(url)
-    soup=BeautifulSoup(respon.content, 'html.parser')
-    paras=soup.find_all('p')
-    text='\n'.join([p.get_text() for p in paras])
+    respon = requests.get(url)
+    soup = BeautifulSoup(respon.content, 'html.parser')
+    paras = soup.find_all('p')
+    text = '\n'.join([p.get_text() for p in paras])
     return text
 
-'''
-def url_g():
-    try:
-        data = request.get_json()
-        text_input = data["url"]
-    except Exception as e:
-        return jsonify({"error": str(e)}), 300
-    try:
-        text=extract_from_url(text_input)
-        return text
-    except Exception as e:
-        return jsonify({"error":str(e)}),100'''
-    
 def url():
     try:
         data = request.get_json()
@@ -89,16 +74,7 @@ def url():
         text, links = extract_from_url(text_input)
         return text, links
     except Exception as e:
-        return jsonify({"error":str(e)}),100
-
-    '''
-    text_input = request.json['url']
-    number_link=request.json['number_link']
-    text,link= extract_from_url(text_input)
-    content=extract_content(link[number_link])
-    return text,content'''
-
-
+        return jsonify({"error": str(e)}), 100
 
 def save_file_and_extract_text(file):
     try:
@@ -132,7 +108,6 @@ def file_up():
         text = extract_from_pdf(file_path)
         return text
 
-
 def chunk_text(text, max_tokens=1500):
     words = text.split()
     chunks = []
@@ -146,7 +121,7 @@ def chunk_text(text, max_tokens=1500):
             current_chunk = [word]
     if current_chunk:
         chunks.append(' '.join(current_chunk))
-    
+
     return chunks
 
 def summary_g(text):
@@ -159,44 +134,42 @@ def summary_g(text):
     )
     return response.choices[0].message.content
 
-
 @app.route('/generate_summary', methods=['POST'])
 def generate_summary():
-    global global_text,chunks,global_text_url
+    global global_text, chunks, global_text_url
     try:
-        if('file' in request.files):
-            if 'file' not in request.files :
-                return jsonify({'error': 'No file part'}), 400
-            global_text= save_file_and_extract_text(request.files['file'])
-            chunks=chunk_text(global_text)
-            summary_f=[summary_g(chunk) for chunk in chunks]
-            summary=' '.join(summary_f)
+        if 'file' in request.files:
+            global_text = save_file_and_extract_text(request.files['file'])
+            chunks = chunk_text(global_text)
+            summary_f = [summary_g(chunk) for chunk in chunks]
+            summary = ' '.join(summary_f)
             return jsonify({"summary": summary})
-        elif('url' in request.json !=""):
-            global_text_url=url()
-            chunks=chunk_text(global_text_url[0])
-            summary_u=[summary_g(chunk) for chunk in chunks] 
-            summary_url=' '.join(summary_u)
-            hyperlinks=global_text_url[1]
-            return jsonify({"summary":summary_url, "hyperlinks": hyperlinks})
-        elif ('url_hp' in request.json !=""):
-            hyperlink_input= request.json['url_hp']
+        elif 'url' in request.json and request.json['url'] != "":
+            global_text_url = url()
+            if isinstance(global_text_url, tuple):
+                chunks = chunk_text(global_text_url[0])
+                summary_u = [summary_g(chunk) for chunk in chunks]
+                summary_url = ' '.join(summary_u)
+                hyperlinks = global_text_url[1]
+                return jsonify({"summary": summary_url, "hyperlinks": hyperlinks})
+            else:
+                return global_text_url
+        elif 'url_hp' in request.json and request.json['url_hp'] != "":
+            hyperlink_input = request.json['url_hp']
             content = extract_content(hyperlink_input)
             chunks = chunk_text(content)
             summary_hp = [summary_g(chunk) for chunk in chunks]
-            summary =' '.join(summary_hp)
+            summary = ' '.join(summary_hp)
             return jsonify({"summary": summary})
         else:
             return jsonify({"error": "No file or URL provided"}), 400
-        
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
 
-    
 REVIEWS_CHROMA_PATH = "chroma_data"
+
 def get_vector_db(text):
-    chunks=chunk_text(text)
+    chunks = chunk_text(text)
     documents = [Document(page_content=chunk) for chunk in chunks]
     vector_db = Chroma.from_documents(
         documents, AzureOpenAIEmbeddings(
@@ -206,26 +179,18 @@ def get_vector_db(text):
             azure_deployment="text-embedding-ada-002"
         ), persist_directory=REVIEWS_CHROMA_PATH
     )
+    return vector_db
 
-def answer_g(quess):
-    reviews_vector_db = Chroma(
-            persist_directory=REVIEWS_CHROMA_PATH,
-            embedding_function=AzureOpenAIEmbeddings(
-            api_key="f35b5881905f403eb0c39bb0a9f45cf5",
-            api_version="2024-02-01",
-            azure_endpoint="https://service-ih.openai.azure.com/",
-            azure_deployment="text-embedding-ada-002"
-        )
-    )
-        
+def answer_g(question, vector_db):
+    reviews_retriever = vector_db.as_retriever(k=10)
     chat_model = AzureChatOpenAI(
-            api_key="f35b5881905f403eb0c39bb0a9f45cf5",
-            api_version="2024-02-01",
-            azure_endpoint="https://service-ih.openai.azure.com/",
-            azure_deployment="gpt3516k",
-            temperature=0
-        )
-        
+        api_key="f35b5881905f403eb0c39bb0a9f45cf5",
+        api_version="2024-02-01",
+        azure_endpoint="https://service-ih.openai.azure.com/",
+        azure_deployment="gpt3516k",
+        temperature=0
+    )
+
     review_template_str = """Your job is to use the information provided in the document
     to answer questions. Use the following context to answer questions.
     Be as detailed as possible, but don't make up any information
@@ -235,18 +200,18 @@ def answer_g(quess):
 
     review_system_prompt = SystemMessagePromptTemplate(
         prompt=PromptTemplate(
-        input_variables=["context"],
-        template=review_template_str,
+            input_variables=["context"],
+            template=review_template_str,
         )
     )
 
     review_human_prompt = HumanMessagePromptTemplate(
         prompt=PromptTemplate(
-        input_variables=["question"],
-        template="{question}",
+            input_variables=["question"],
+            template="{question}",
         )
     )
-    
+
     messages = [review_system_prompt, review_human_prompt]
 
     review_prompt_template = ChatPromptTemplate(
@@ -254,7 +219,6 @@ def answer_g(quess):
         messages=messages,
     )
 
-    reviews_retriever  = reviews_vector_db.as_retriever(k=10)
     review_chain = (
         {"context": reviews_retriever, "question": RunnablePassthrough()}
         | review_prompt_template
@@ -262,32 +226,30 @@ def answer_g(quess):
         | StrOutputParser()
     )
 
-    answer=review_chain.invoke(quess)
+    answer = review_chain.invoke(question)
     return answer
 
 @app.route('/find_answer', methods=['POST'])
 def generate_answer():
-    global global_text,chunks,global_text_url
+    global global_text, chunks, global_text_url
     try:
-        if ('file' in request.files):
-            get_vector_db(global_text)
-        get_vector_db(global_text_url[0])
-        for chunk in chunks:
-            get_vector_db(chunk) 
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
-    try:
+        vector_db = None
+        if 'file' in request.files:
+            vector_db = get_vector_db(global_text)
+        else:
+            vector_db = get_vector_db(global_text_url[0])
+
+        if not vector_db:
+            return jsonify({"error": "Failed to create vector database"}), 500
+
         data = request.get_json()
-        question= data["question"]
-        answer=answer_g(question)
+        question = data["question"]
+        answer = answer_g(question, vector_db)
         return jsonify({"answer": answer})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    app.run(debug=True,use_reloader=False)
+    app.run(debug=True, use_reloader=False)
