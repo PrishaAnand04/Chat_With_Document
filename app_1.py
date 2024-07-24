@@ -7,7 +7,7 @@ from langchain.prompts import PromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 from bs4 import BeautifulSoup
 import requests
-import dotenv 
+import dotenv
 from langchain_openai import AzureChatOpenAI
 from langchain.prompts import (
     PromptTemplate,
@@ -148,11 +148,18 @@ def generate_summary():
         elif 'url' in request.json and request.json['url'] != "":
             global_text_url = url()
             if isinstance(global_text_url, tuple):
-                chunks = chunk_text(global_text_url[0])
+                main_text, hyperlinks = global_text_url
+                chunks = chunk_text(main_text)
                 summary_u = [summary_g(chunk) for chunk in chunks]
                 summary_url = ' '.join(summary_u)
-                hyperlinks = global_text_url[1]
-                return jsonify({"summary": summary_url, "hyperlinks": hyperlinks})
+
+                # Extract content from all hyperlinks
+                all_hyperlinks_content = []
+                for link in hyperlinks:
+                    content = extract_content(link)
+                    all_hyperlinks_content.append(content)
+
+                return jsonify({"summary": summary_url, "hyperlinks": hyperlinks, "hyperlinks_content": all_hyperlinks_content})
             else:
                 return global_text_url
         elif 'url_hp' in request.json and request.json['url_hp'] != "":
@@ -169,9 +176,15 @@ def generate_summary():
 
 REVIEWS_CHROMA_PATH = "chroma_data"
 
-def get_vector_db(text):
+def get_vector_db(text, hyperlinks_content=[]):
     chunks = chunk_text(text)
     documents = [Document(page_content=chunk) for chunk in chunks]
+
+    for hyperlink_text in hyperlinks_content:
+        hyperlink_chunks = chunk_text(hyperlink_text)
+        hyperlink_documents = [Document(page_content=chunk) for chunk in hyperlink_chunks]
+        documents.extend(hyperlink_documents)
+
     vector_db = Chroma.from_documents(
         documents, AzureOpenAIEmbeddings(
             api_key="f35b5881905f403eb0c39bb0a9f45cf5",
@@ -183,7 +196,7 @@ def get_vector_db(text):
     return vector_db
 
 def answer_g(question, vector_db):
-    reviews_retriever = VectorStore.as_retriever(vector_db,k=10)
+    reviews_retriever = VectorStore.as_retriever(vector_db, k=10)
     chat_model = AzureChatOpenAI(
         api_key="f35b5881905f403eb0c39bb0a9f45cf5",
         api_version="2024-02-01",
@@ -235,11 +248,14 @@ def generate_answer():
     global global_text, chunks, global_text_url
     try:
         vector_db = None
+        hyperlinks_content = []
         if 'file' in request.files:
             vector_db = get_vector_db(global_text)
         else:
             if isinstance(global_text_url, tuple):
-                vector_db=get_vector_db(global_text_url[0])
+                main_text, hyperlinks = global_text_url
+                hyperlinks_content = [extract_content(link) for link in hyperlinks]
+                vector_db = get_vector_db(main_text, hyperlinks_content)
             else:
                 vector_db = get_vector_db(global_text_url)
 
